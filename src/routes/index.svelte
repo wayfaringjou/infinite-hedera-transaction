@@ -1,5 +1,9 @@
-<script>
-	console.log(!(import.meta.env.MODE === 'production'));
+<script lang="ts">
+	import Modal from '../ui/modal/Modal.svelte';
+	import { modalStore } from '../stores/modalStore';
+
+	const store = modalStore(true);
+	const { open } = store;
 </script>
 
 <main class="min-h-screen">
@@ -32,7 +36,9 @@
 					<span class="font-bold block text-gray-400">Available:</span>
 					<span class="font-medium">$0.00</span>
 					<span class="text-gray-400 text-sm font-medium">(Excludes pending transactions)</span>
-					<button class="bg-black text-white w-full rounded-full py-2 py-4 text-xl font-bold my-8"
+					<button
+						on:click={open}
+						class="bg-black text-white w-full rounded-full p-4 text-xl font-bold my-8"
 						>Deposit</button
 					>
 					<hr />
@@ -63,9 +69,13 @@
 				<h3>Latest Transactions</h3>
 				<div class="border-solid border-b-2 border-gray-400 w-full -mt-2px relative -z-1" />
 			</header>
-			<section>
+			<section class="mt-12 mb-6">
 				<span>No transactions yet</span>
 			</section>
 		</section>
 	</div>
+	<Modal>
+		<div slot="header">Test</div>
+		<div slot="content">Content</div>
+	</Modal>
 </main>
