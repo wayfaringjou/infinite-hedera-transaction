@@ -1,9 +1,8 @@
 <script lang="ts">
+	import HrHeader from '../ui/hr-header/HrHeader.svelte';
+	import HederaButton from '../ui/hederabutton/HederaButton.svelte';
 	import Modal from '../ui/modal/Modal.svelte';
-	import { modalStore } from '../stores/modalStore';
-
-	const store = modalStore(true);
-	const { open } = store;
+	import { modal } from '../stores/modalStore';
 </script>
 
 <main class="min-h-screen">
@@ -27,8 +26,7 @@
 	<div class="grid grid-cols-1 md-lg:grid-cols-30-70">
 		<section class="p-6">
 			<header>
-				<h3>Total Balance</h3>
-				<div class="border-solid border-b-2 border-gray-400 w-full -mt-2px relative -z-1" />
+				<HrHeader header="Total Balance" />
 			</header>
 			<section>
 				<div>
@@ -37,7 +35,7 @@
 					<span class="font-medium">$0.00</span>
 					<span class="text-gray-400 text-sm font-medium">(Excludes pending transactions)</span>
 					<button
-						on:click={open}
+						on:click={modal.open}
 						class="bg-black text-white w-full rounded-full p-4 text-xl font-bold my-8"
 						>Deposit</button
 					>
@@ -66,8 +64,7 @@
 		</section>
 		<section class="p-6">
 			<header>
-				<h3>Latest Transactions</h3>
-				<div class="border-solid border-b-2 border-gray-400 w-full -mt-2px relative -z-1" />
+				<HrHeader header="Latest Transactions" />
 			</header>
 			<section class="mt-12 mb-6">
 				<span>No transactions yet</span>
@@ -75,7 +72,7 @@
 		</section>
 	</div>
 	<Modal>
-		<div slot="header">Test</div>
-		<div slot="content">Content</div>
+		<HrHeader slot="header" header="Select a payment to deposit" />
+		<HederaButton slot="content" />
 	</Modal>
 </main>

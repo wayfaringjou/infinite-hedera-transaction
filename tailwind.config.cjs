@@ -3,6 +3,7 @@ module.exports = {
 	darkMode: false, // or 'media' or 'class'
 	theme: {
 		screens: {
+			'sm': '576px',
 			'md-lg': '960px'
 		},
 		extend: {
@@ -14,6 +15,9 @@ module.exports = {
 			},
 			gridTemplateColumns: {
 				'30-70': '30% 70%'
+			},
+			backdropBlur: {
+				xs: '2px'
 			}
 		}
 	},

@@ -20,8 +20,8 @@
     @apply border-solid;
     @apply border-b-2;
     @apply border-black;
-    @apply w-max;
     @apply pb-3;
+    width: fit-content;
   }
   body {
     font-family: PlusJakartaSans, sans-serif;
