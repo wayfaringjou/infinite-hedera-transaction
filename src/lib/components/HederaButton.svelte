@@ -1,6 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { modal } from '../../stores/modalStore';
+	import { modal } from '../../stores/stores';
 </script>
 
 <div

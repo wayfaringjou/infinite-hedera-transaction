@@ -2,7 +2,7 @@
 	import HrHeader from '$lib/ui/HrHeader.svelte';
 	import Modal from '$lib/ui/Modal.svelte';
 	import HederaButton from '$lib/components/HederaButton.svelte';
-	import { modal } from '../stores/modalStore';
+	import { modal } from '../stores/stores';
 </script>
 
 <main class="min-h-screen">

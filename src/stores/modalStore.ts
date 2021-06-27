@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 
-const createModal = (initial: boolean) => {
+export const createModal = (initial: boolean) => {
 	const isOpen = writable<boolean>(initial);
 	const { subscribe, set, update } = isOpen;
 	return {
@@ -12,4 +12,3 @@ const createModal = (initial: boolean) => {
 	};
 };
 
-export const modal = createModal(false);

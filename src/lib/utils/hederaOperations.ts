@@ -6,7 +6,8 @@ import {
 	AccountBalanceQuery,
 	TransferTransaction,
 	Hbar,
-	HbarUnit
+	HbarUnit,
+	AccountInfoQuery
 } from '@hashgraph/sdk';
 
 // Configure client
@@ -15,12 +16,12 @@ import {
 // const client = Client.forTestnet();
 // client.setOperator(operatorID, operatorKey);
 
-const createOperator = (operatorId: string, operatorKey: string) => ({
-	operatorKey: PrivateKey.fromString(variables.hederaPrivateKey as string),
-	operatorID: AccountId.fromString(variables.hederaAccountId as string),
+const createOperator = (account: string, privateKey: string | null = null) => ({
+	operatorId: AccountId.fromString(account),
+	operatorKey: PrivateKey.fromString(privateKey),
 	client: Client.forTestnet(),
 	set() {
-		this.client.setOperator(this.operatorID, this.operatorKey);
+		this.client.setOperator(this.operatorId, this.operatorKey);
 	},
 	async checkBalance(accountId: string) {
 		const balance = await new AccountBalanceQuery().setAccountId(accountId).execute(this.client);
@@ -33,6 +34,11 @@ const createOperator = (operatorId: string, operatorKey: string) => ({
 			.execute(this.client);
 		const transferReceipt = await transferResponse.getReceipt(this.client);
 		return transferReceipt;
+	},
+	async AccountInfo(accountId: string) {
+		const query = new AccountInfoQuery().setAccountId(accountId);
+		const accountInfo = await query.execute(this.client);
+		return accountInfo;
 	}
 });
 

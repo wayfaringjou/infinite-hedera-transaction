@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { modal } from '../../stores/modalStore';
+	import { modal } from '../../stores/stores';
 	const { close } = modal;
 
 	let modalElement: HTMLDivElement;
