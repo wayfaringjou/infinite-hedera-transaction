@@ -1,10 +1,17 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { modal } from '../../stores/modalStore';
 </script>
 
-<div role="button" on:click={() => goto('/wallet/addhedera')}>
+<div
+	role="button"
+	on:click={() => {
+		modal.close();
+		goto('/wallet/hedera');
+	}}
+>
 	<article
-		class="border-b-2 border-gray-300 border-solid text-gray-400 flex flex-row justify-between p-6"
+		class="border-b-2 border-gray-300 border-solid text-gray-400 flex flex-row justify-between items-center p-6"
 	>
 		<svg
 			width="50px"
@@ -24,13 +31,8 @@
 			<h4 class="text-black font-bold">Hedera</h4>
 			<p>Deposit funds using HBAR</p>
 		</div>
-		<svg
-			width="24px"
-			hieght="24px"
-			class="fill-current"
-			focusable="false"
-			viewBox="0 0 24 24"
-			aria-hidden="true"><path d="M5.88 4.12L13.76 12l-7.88 7.88L8 22l10-10L8 2z" /></svg
+		<svg height="24px" class="fill-current" focusable="false" viewBox="0 0 24 24" aria-hidden="true"
+			><path d="M5.88 4.12L13.76 12l-7.88 7.88L8 22l10-10L8 2z" /></svg
 		>
 	</article>
 </div>

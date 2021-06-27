@@ -1,7 +1,7 @@
 <script lang="ts">
-	import HrHeader from '../ui/hr-header/HrHeader.svelte';
-	import HederaButton from '../ui/hederabutton/HederaButton.svelte';
-	import Modal from '../ui/modal/Modal.svelte';
+	import HrHeader from '$lib/ui/HrHeader.svelte';
+	import Modal from '$lib/ui/Modal.svelte';
+	import HederaButton from '$lib/components/HederaButton.svelte';
 	import { modal } from '../stores/modalStore';
 </script>
 
