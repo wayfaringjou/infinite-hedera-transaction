@@ -7,7 +7,9 @@ import {
 	TransferTransaction,
 	Hbar,
 	HbarUnit,
-	AccountInfoQuery
+	AccountInfoQuery,
+	Mnemonic,
+	AccountCreateTransaction
 } from '@hashgraph/sdk';
 
 // Configure client
@@ -35,10 +37,39 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 		const transferReceipt = await transferResponse.getReceipt(this.client);
 		return transferReceipt;
 	},
-	async AccountInfo(accountId: string) {
+	async createAccount() {
+		const newAccountPrivateKey = await PrivateKey.generate();
+		const newAccountPublicKey = newAccountPrivateKey.publicKey;
+		const transaction = new AccountCreateTransaction()
+			.setKey(newAccountPublicKey)
+			.setInitialBalance(new Hbar(1000));
+
+		const txResponse = await transaction.execute(this.client);
+
+		const receipt = await txResponse.getReceipt(this.client);
+		const newAccountId = receipt.accountId.toString();
+		const newAccountBalance = await this.checkBalance(newAccountId);
+		return {
+			newAccountId,
+			newAccountPrivateKey: newAccountPrivateKey.toString(),
+			newAccountBalance
+		};
+	},
+	async accountInfo(accountId: string) {
 		const query = new AccountInfoQuery().setAccountId(accountId);
 		const accountInfo = await query.execute(this.client);
-		return accountInfo;
+		return { id: accountInfo.accountId.toString(), privKey: `${accountInfo.key}` };
+	},
+	async generateMnemonic() {
+		const mnemonic = await Mnemonic.generate();
+		console.log(mnemonic.toString());
+		return mnemonic;
+	},
+	async recoverFromMnemonic(mnemonicStr: string) {
+		const recoveredMnemonic = await Mnemonic.fromString(mnemonicStr);
+		const privateKey = await recoveredMnemonic.toPrivateKey();
+
+		return privateKey;
 	}
 });
 

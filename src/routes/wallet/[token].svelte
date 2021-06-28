@@ -31,7 +31,7 @@
 	export let data;
 	export let accountData;
 	const usdValue = data?.hbarData.data['4642'].quote.USD.price;
-	console.log(accountData.operatorInfo.accountId.num);
+	console.log(accountData);
 </script>
 
 <main class="min-h-screen">

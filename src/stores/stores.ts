@@ -5,5 +5,6 @@ export const modal = createModal(false);
 
 export const userWallet = createUserWallet({
 	accountId: '',
-	privateKey: ''
+	privateKey: '',
+  balance: 0
 });
