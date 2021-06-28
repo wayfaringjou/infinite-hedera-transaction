@@ -22,16 +22,51 @@
 	}
 </script>
 
-<script>
+<script lang="ts">
 	import { goto } from '$app/navigation';
+	import { modal, userWallet } from '../../stores/stores';
+	import Modal from '$lib/ui/Modal.svelte';
 	import UserWalletForm from '$lib/components/UserWalletForm.svelte';
 	import HrHeader from '$lib/ui/HrHeader.svelte';
-	import Modal from '$lib/ui/Modal.svelte';
-	import { modal } from '../../stores/stores';
 	export let data;
-	export let accountData;
 	const usdValue = data?.hbarData.data['4642'].quote.USD.price;
-	console.log(accountData);
+	let transferAmount: string | number = '';
+
+	function roundNumber(num: number) {
+		const numberFormatted = new Intl.NumberFormat('en-US', {
+			maximumFractionDigits: 2
+		}).format(num);
+		return Number(numberFormatted);
+	}
+
+	export async function postTransferAmount() {
+		const url = `/api/transferhbar`;
+		const res = await fetch(url, {
+			method: 'post',
+			headers: new Headers({
+				'Content-Type': 'application/json'
+			}),
+			body: JSON.stringify({
+				transfer: transferAmount
+			})
+		});
+
+		if (res.ok) {
+			return {
+				data: await res.json()
+			};
+		}
+
+		return {
+			status: res.status,
+			error: new Error(`Could not load ${url}`)
+		};
+	}
+
+	const handleTransfer = async () => {
+		const data = await postTransferAmount();
+		console.log(data);
+	};
 </script>
 
 <main class="min-h-screen">
@@ -67,21 +102,91 @@
 			>
 		</header>
 		<section class="space-y-4 mt-5">
-			<p>Status: <span>Connected account</span></p>
-			<ol role="list" class="list-decimal text-xl">
+			<p class="mx-auto w-max text-lg my-8">
+				Status:
+				{#if $userWallet.accountId}
+					<span class="font-bold text-green-500 block">Account connected:</span>
+					<span class="font-bold">{$userWallet.accountId}</span>
+				{:else if !$userWallet.accountId}
+					<span class="text-gray-400">Account not connected</span>
+				{/if}
+			</p>
+			<ol role="list" class="list-decimal text-xl space-y-8">
 				<li>
 					<h3>Connect your wallet:</h3>
 					<button
+						disabled={Boolean($userWallet.accountId)}
 						on:click={modal.open}
-						class="bg-black text-white w-full rounded-full p-4 text-xl font-bold my-8"
-						>Set account</button
+						class={`${
+							$userWallet.accountId ? 'bg-gray-400' : 'bg-black'
+						} text-white w-full rounded-full p-4 text-xl font-bold my-8`}
 					>
+						{#if $userWallet.accountId}
+							Done
+						{:else}
+							Set account
+						{/if}
+					</button>
 				</li>
 				<li>
 					<h3>Set amount for transfer:</h3>
-					<p>Hedera USD Value: {usdValue}</p>
-					<span>Available Funds</span>
-					<input type="number" min="0.00" step="0.1" />
+					<p class="my-8">
+						Hedera USD Value:
+						<span class="text-2xl block mt-4 text-gray-500">
+							{usdValue} USD
+						</span>
+						<span class="mt-4 block">Available Funds:</span>
+						<span class="text-2xl block mt-4">{$userWallet.balance}</span>
+					</p>
+					<label for="transfer">
+						<p>Amount of Hbars to transfer:</p>
+						<div class="flex flex-row flex-nowrap">
+							<input
+								bind:value={transferAmount}
+								class="border-b border-gray-400 border-solid w-full mt-4 p-1 text-3xl"
+								placeholder="1.25 (Hbars to transfer)"
+								type="number"
+								max={parseFloat(`${$userWallet.balance}`)}
+								min="0.00"
+								step="0.1"
+								name="transfer"
+								id="transfer"
+							/>
+							<button
+								class="p-4 text-2xl font-bold w-max flex-shrink-0"
+								type="button"
+								on:click={() => (transferAmount = parseFloat(`${$userWallet.balance}`))}
+							>
+								Add Max
+							</button>
+						</div>
+					</label>
+				</li>
+				<li>
+					<h3>Verify amount and transfer:</h3>
+					<p class="mt-6">
+						Total value in USD:
+						<span class="block text-5xl my-5">
+							$ {transferAmount ? roundNumber(parseFloat(`${transferAmount}`) * usdValue) : '0.00'}
+						</span>
+					</p>
+					<button
+						disabled={!(
+							parseFloat(`${$userWallet.balance}`) > 0 && parseFloat(`${transferAmount}`) > 0
+						)}
+						on:click={handleTransfer}
+						class={`${
+							parseFloat(`${$userWallet.balance}`) > 0 && parseFloat(`${transferAmount}`) > 0
+								? 'bg-black'
+								: 'bg-gray-400'
+						} text-white w-full rounded-full p-4 text-xl font-bold my-8`}
+					>
+						{#if parseFloat(`${$userWallet.balance}`) > 0 && parseFloat(`${transferAmount}`) > 0}
+							Transfer
+						{:else}
+							No amount added
+						{/if}
+					</button>
 				</li>
 			</ol>
 		</section>

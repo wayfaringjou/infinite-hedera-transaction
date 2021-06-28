@@ -3,7 +3,7 @@ import { writable } from 'svelte/store';
 type userWallet = {
 	accountId: string;
 	privateKey: string;
-	balance: number;
+	balance: string | number;
 };
 
 export const createUserWallet = (initial: userWallet) => {

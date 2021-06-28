@@ -79,7 +79,7 @@
 		@apply -translate-y-1/2;
 		@apply bg-white;
 		@apply rounded-lg;
-		max-height: 650px;
+		/*max-height: 650px;*/
 		width: 85%;
 	}
 	@media (min-width: 500px) {

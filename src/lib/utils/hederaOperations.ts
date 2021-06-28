@@ -9,7 +9,8 @@ import {
 	HbarUnit,
 	AccountInfoQuery,
 	Mnemonic,
-	AccountCreateTransaction
+	AccountCreateTransaction,
+	AccountInfo
 } from '@hashgraph/sdk';
 
 // Configure client
@@ -25,9 +26,17 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 	set() {
 		this.client.setOperator(this.operatorId, this.operatorKey);
 	},
-	async checkBalance(accountId: string) {
-		const balance = await new AccountBalanceQuery().setAccountId(accountId).execute(this.client);
-		return balance;
+	async checkBalance(accountId: string): Promise<number | Error> {
+		this.client.setOperator(this.operatorId, this.operatorKey);
+		let response: null | Error | number = null;
+		try {
+			const balance = await new AccountBalanceQuery().setAccountId(accountId).execute(this.client);
+			if (!balance) throw new Error('Got bad balance response');
+			response = parseFloat(balance.hbars.toString());
+		} catch (error) {
+			response = error;
+		}
+		return response;
 	},
 	async transferHbar(senderId: string, receiverId: string, transferedHbars: number) {
 		const transferResponse = await new TransferTransaction()
@@ -55,14 +64,32 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 			newAccountBalance
 		};
 	},
-	async accountInfo(accountId: string) {
+	async accountInfo(
+		accountId: string
+	): Promise<{ error: Error | null; data: { id: string; privKey: string; balance: number } | null }> {
+		this.client.setOperator(this.operatorId, this.operatorKey);
+
 		const query = new AccountInfoQuery().setAccountId(accountId);
-		const accountInfo = await query.execute(this.client);
-		return { id: accountInfo.accountId.toString(), privKey: `${accountInfo.key}` };
+		const response = {
+			error: <Error | null>null,
+			data: <{ id: string; privKey: string, balance: number } | null>null
+		};
+
+		try {
+			const accountInfo = await query.execute(this.client);
+			if (!(accountInfo instanceof AccountInfo)) throw new Error('Got bad account info response');
+			const id = accountInfo.accountId.toString();
+			const privKey = `${accountInfo.key}`;
+			const balance = parseFloat(accountInfo.balance.toString());
+
+			response.data = { id, privKey, balance };
+		} catch (error) {
+			response.error = error;
+		}
+		return response;
 	},
 	async generateMnemonic() {
 		const mnemonic = await Mnemonic.generate();
-		console.log(mnemonic.toString());
 		return mnemonic;
 	},
 	async recoverFromMnemonic(mnemonicStr: string) {

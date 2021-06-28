@@ -1,18 +1,21 @@
 import hederaOperator from '$lib/utils/hederaOperations';
-import type { EndpointOutput } from '@sveltejs/kit';
+import type { EndpointOutput, Request } from '@sveltejs/kit';
 
-hederaOperator.set();
-
-export async function get({ query }): Promise<EndpointOutput> {
-	console.log(query.get('account'));
-	return {
-		body: {
-			// operatorBalance: (
-			//	await hederaOperator.checkBalance(variables.hederaAccountId as string)
-			//).hbars.toString(),
-			accountInfo: await hederaOperator.accountInfo(query.get('account')),
-			accountBalance: (await hederaOperator.checkBalance(query.get('account'))).hbars.toString()
-			// newAccount: await hederaOperator.createAccount()
-		}
+export async function get({ query }: Request): Promise<EndpointOutput | Error> {
+	const account = query.get('account');
+	let response: {
+		error: Error | string | null;
+		data: { id: string; privKey: string; balance: number } | null;
 	};
+
+	try {
+		response = await hederaOperator.accountInfo(account);
+		if (response.error instanceof Error) throw response.error;
+	} catch (error) {
+		response.error = error.message;
+	}
+
+	const body = JSON.stringify(response);
+	console.log(body);
+	return { body };
 }

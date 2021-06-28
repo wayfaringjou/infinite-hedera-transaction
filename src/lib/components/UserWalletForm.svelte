@@ -1,12 +1,21 @@
 <script lang="ts">
-	import { userWallet } from '../../stores/stores';
+	import { userWallet, modal } from '../../stores/stores';
 	let userAccountId = '';
 	let userPrivateKey = '';
 	let loading = false;
 	let connectSelected = false;
 	let createSelected = false;
-
-	export async function getAccountInfo(account: string) {
+	let errorMsg = '';
+	export async function getAccountInfo(
+		account: string
+	): Promise<{
+		data?: {
+			error: string | null;
+			data: { id: string; privKey: string; balance: number } | null;
+		};
+		status?: number;
+		error?: Error;
+	}> {
 		const url = `/api/accountinfo.json?account=${account}`;
 		const res = await fetch(url);
 
@@ -42,20 +51,24 @@
 		try {
 			loading = true;
 			connectSelected = true;
-			const { data, error } = await getAccountInfo(userAccountId);
+			const {
+				data: { data, error }
+			} = await getAccountInfo(userAccountId);
 
-			if (error) throw error;
+			if (error) throw new Error(error);
 
 			if (!data) throw new Error('There was a problem connecting wallet. Try again later.');
 
 			$userWallet = {
-				accountId: data.accountInfo.id,
-				privateKey: data.accountInfo.privKey,
-				balance: data.accountBalance
+				accountId: data.id,
+				privateKey: data.privKey,
+				balance: data.balance
 			};
 			loading = false;
+			modal.close();
 		} catch (error) {
 			console.error(error);
+			errorMsg = error.message;
 			connectSelected = false;
 			loading = false;
 		}
@@ -76,10 +89,11 @@
 				privateKey: data.newUser.newAccountPrivateKey,
 				balance: data.newUser.newAccountBalance
 			};
-			console.log($userWallet);
+
 			loading = false;
 		} catch (error) {
 			console.error(error);
+			errorMsg = error.message;
 			createSelected = false;
 			loading = false;
 		}
@@ -116,6 +130,11 @@
 				/>
 			</label>
 		</div>
+		{#if errorMsg}
+			<span class="text-center block text-red-500 text-xl font-bold"
+				>There was an error, check console for more details.</span
+			>
+		{/if}
 		<div class="flex flex-row flex-nowrap">
 			{#if !createSelected}
 				<button
