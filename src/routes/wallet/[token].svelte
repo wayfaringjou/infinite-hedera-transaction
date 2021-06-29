@@ -47,7 +47,8 @@
 				'Content-Type': 'application/json'
 			}),
 			body: JSON.stringify({
-				transfer: transferAmount
+				sender: $userWallet.accountId,				
+				transferedHbars: transferAmount
 			})
 		});
 

@@ -6,6 +6,7 @@
 	let connectSelected = false;
 	let createSelected = false;
 	let errorMsg = '';
+
 	export async function getAccountInfo(
 		account: string
 	): Promise<{
@@ -31,7 +32,18 @@
 		};
 	}
 
-	export async function getNew() {
+	export async function getNew(): Promise<{
+		data?: {
+			error: string | null;
+			data: {
+				newAccountId: string;
+				newAccountPrivateKey: string;
+				newAccountBalance: number;
+			} | null;
+		};
+		status?: number;
+		error?: Error;
+	}> {
 		const url = `/api/generatenew`;
 		const res = await fetch(url);
 
@@ -78,19 +90,22 @@
 		try {
 			loading = true;
 			createSelected = true;
-			const { data, error } = await getNew();
+			const {
+				data: { data, error }
+			} = await getNew();
 
-			if (error) throw error;
+			if (error) throw new Error(error);
 
 			if (!data) throw new Error('There was a problem generating account. Try again later.');
 
 			$userWallet = {
-				accountId: data.newUser.newAccountId,
-				privateKey: data.newUser.newAccountPrivateKey,
-				balance: data.newUser.newAccountBalance
+				accountId: data.newAccountId,
+				privateKey: data.newAccountPrivateKey,
+				balance: data.newAccountBalance
 			};
-
+			console.log($userWallet);
 			loading = false;
+			modal.close();
 		} catch (error) {
 			console.error(error);
 			errorMsg = error.message;

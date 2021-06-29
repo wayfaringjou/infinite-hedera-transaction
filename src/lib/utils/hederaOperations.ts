@@ -10,7 +10,8 @@ import {
 	AccountInfoQuery,
 	Mnemonic,
 	AccountCreateTransaction,
-	AccountInfo
+	AccountInfo,
+	TransactionReceipt
 } from '@hashgraph/sdk';
 
 // Configure client
@@ -19,12 +20,27 @@ import {
 // const client = Client.forTestnet();
 // client.setOperator(operatorID, operatorKey);
 
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 const createOperator = (account: string, privateKey: string | null = null) => ({
 	operatorId: AccountId.fromString(account),
+	operatorIdStr: account,
 	operatorKey: PrivateKey.fromString(privateKey),
 	client: Client.forTestnet(),
 	set() {
 		this.client.setOperator(this.operatorId, this.operatorKey);
+	},
+	retryOnStreamErr(maxRetries: number, fn) {
+		return fn().catch(async (err: Error) => {
+			console.log(err.message);
+			if (maxRetries <= 0 || !err.message.includes('RST_STREAM')) {
+				throw err;
+			}
+			await sleep(2000);
+			return this.retryOnStreamErr(maxRetries - 1, fn);
+		});
 	},
 	async checkBalance(accountId: string): Promise<number | Error> {
 		this.client.setOperator(this.operatorId, this.operatorKey);
@@ -38,46 +54,94 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 		}
 		return response;
 	},
-	async transferHbar(senderId: string, receiverId: string, transferedHbars: number) {
-		const transferResponse = await new TransferTransaction()
-			.addHbarTransfer(senderId, Hbar.from(-1 * transferedHbars, HbarUnit.Hbar)) //Sending account
-			.addHbarTransfer(receiverId, Hbar.from(transferedHbars, HbarUnit.Hbar)) //Receiving account
-			.execute(this.client);
-		const transferReceipt = await transferResponse.getReceipt(this.client);
-		return transferReceipt;
+	async transferHbar(
+		senderId: string,
+		transferedHbars: number
+	): Promise<{
+		error: Error | null;
+		data: TransactionReceipt | null;
+	}> {
+		this.client.setOperator(this.operatorId, this.operatorKey);
+
+		const response = {
+			error: <Error | null>null,
+			data: <TransactionReceipt | null>null
+		};
+
+		try {
+			const transferReceipt = await this.retryOnStreamErr(3, async () => {
+				const transferResponse = await new TransferTransaction()
+					.addHbarTransfer(senderId, Hbar.from(-1 * transferedHbars, HbarUnit.Hbar)) //Sending account
+					.addHbarTransfer(this.operatorIdStr, Hbar.from(transferedHbars, HbarUnit.Hbar)) //Receiving account
+					.execute(this.client);
+
+				const receipt = await transferResponse.getReceipt(this.client);
+				return receipt;
+			});
+
+			if (!(transferReceipt instanceof TransactionReceipt))
+				throw new Error('Got bad receipt response');
+
+			response.data = transferReceipt;
+		} catch (error) {
+			response.error = error;
+		}
+		return response;
 	},
 	async createAccount() {
 		const newAccountPrivateKey = await PrivateKey.generate();
 		const newAccountPublicKey = newAccountPrivateKey.publicKey;
-		const transaction = new AccountCreateTransaction()
-			.setKey(newAccountPublicKey)
-			.setInitialBalance(new Hbar(1000));
 
-		const txResponse = await transaction.execute(this.client);
-
-		const receipt = await txResponse.getReceipt(this.client);
-		const newAccountId = receipt.accountId.toString();
-		const newAccountBalance = await this.checkBalance(newAccountId);
-		return {
-			newAccountId,
-			newAccountPrivateKey: newAccountPrivateKey.toString(),
-			newAccountBalance
+		const response = {
+			error: <Error | null>null,
+			data: <
+				{ newAccountId: string; newAccountPrivateKey: string; newAccountBalance: number } | null
+			>null
 		};
+		try {
+			const newAccountData = await this.retryOnStreamErr(3, async () => {
+				const transaction = new AccountCreateTransaction()
+					.setKey(newAccountPublicKey)
+					.setInitialBalance(new Hbar(1));
+
+				const txResponse = await transaction.execute(this.client);
+
+				const receipt = await txResponse.getReceipt(this.client);
+				const newAccountId = receipt.accountId.toString();
+				const newAccountBalance = await this.checkBalance(newAccountId);
+				return {
+					newAccountId,
+					newAccountPrivateKey: newAccountPrivateKey.toString(),
+					newAccountBalance
+				};
+			});
+			response.data = newAccountData;
+		} catch (error) {
+			response.error = error;
+		}
+		return response;
 	},
 	async accountInfo(
 		accountId: string
-	): Promise<{ error: Error | null; data: { id: string; privKey: string; balance: number } | null }> {
+	): Promise<{
+		error: Error | null;
+		data: { id: string; privKey: string; balance: number } | null;
+	}> {
 		this.client.setOperator(this.operatorId, this.operatorKey);
 
-		const query = new AccountInfoQuery().setAccountId(accountId);
 		const response = {
 			error: <Error | null>null,
-			data: <{ id: string; privKey: string, balance: number } | null>null
+			data: <{ id: string; privKey: string; balance: number } | null>null
 		};
 
 		try {
-			const accountInfo = await query.execute(this.client);
+			const accountInfo = await this.retryOnStreamErr(3, () => {
+				const query = new AccountInfoQuery().setAccountId(accountId);
+				return query.execute(this.client);
+			});
+
 			if (!(accountInfo instanceof AccountInfo)) throw new Error('Got bad account info response');
+
 			const id = accountInfo.accountId.toString();
 			const privKey = `${accountInfo.key}`;
 			const balance = parseFloat(accountInfo.balance.toString());
