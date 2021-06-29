@@ -14,12 +14,6 @@ import {
 	TransactionReceipt
 } from '@hashgraph/sdk';
 
-// Configure client
-// const operatorKey = PrivateKey.fromString(variables.hederaPrivateKey as string);
-// const operatorID = AccountId.fromString(variables.hederaAccountId as string);
-// const client = Client.forTestnet();
-// client.setOperator(operatorID, operatorKey);
-
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -34,8 +28,11 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 	},
 	retryOnStreamErr(maxRetries: number, fn) {
 		return fn().catch(async (err: Error) => {
-			console.log(err.message);
-			if (maxRetries <= 0 || !err.message.includes('RST_STREAM')) {
+			if (
+				maxRetries <= 0 ||
+				err.message.includes('UNAVAILABLE') ||
+				!err.message.includes('RST_STREAM')
+			) {
 				throw err;
 			}
 			await sleep(2000);
@@ -56,46 +53,64 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 	},
 	async transferHbar(
 		senderId: string,
+		senderPrivKey: string,
 		transferedHbars: number
 	): Promise<{
 		error: Error | null;
-		data: TransactionReceipt | null;
+		data: { transferReceipt: TransactionReceipt; txStatus: string } | null;
 	}> {
-		this.client.setOperator(this.operatorId, this.operatorKey);
+		// this.client.setOperator(this.operatorId, this.operatorKey);
+		const clientId = AccountId.fromString(senderId);
+		const clientPrivKey = PrivateKey.fromString(senderPrivKey);
+
+		const userclient = Client.forTestnet();
+		userclient.setOperator(clientId, clientPrivKey);
 
 		const response = {
 			error: <Error | null>null,
-			data: <TransactionReceipt | null>null
+			data: <{ transferReceipt: TransactionReceipt; txStatus: string } | null>null
 		};
-
 		try {
 			const transferReceipt = await this.retryOnStreamErr(3, async () => {
 				const transferResponse = await new TransferTransaction()
 					.addHbarTransfer(senderId, Hbar.from(-1 * transferedHbars, HbarUnit.Hbar)) //Sending account
 					.addHbarTransfer(this.operatorIdStr, Hbar.from(transferedHbars, HbarUnit.Hbar)) //Receiving account
-					.execute(this.client);
+					.execute(userclient);
 
-				const receipt = await transferResponse.getReceipt(this.client);
+				const receipt = await transferResponse.getReceipt(userclient);
 				return receipt;
 			});
 
 			if (!(transferReceipt instanceof TransactionReceipt))
 				throw new Error('Got bad receipt response');
 
-			response.data = transferReceipt;
+			response.data = { transferReceipt, txStatus: transferReceipt.status.toString() };
 		} catch (error) {
 			response.error = error;
 		}
 		return response;
 	},
-	async createAccount() {
+	async createAccount(): Promise<{
+		error: Error | null;
+		data: {
+			newAccountId: string;
+			newAccountPrivateKey: string;
+			newAccountPublicKey: string;
+			newAccountBalance: number;
+		} | null;
+	}> {
 		const newAccountPrivateKey = await PrivateKey.generate();
 		const newAccountPublicKey = newAccountPrivateKey.publicKey;
 
 		const response = {
 			error: <Error | null>null,
 			data: <
-				{ newAccountId: string; newAccountPrivateKey: string; newAccountBalance: number } | null
+				{
+					newAccountId: string;
+					newAccountPrivateKey: string;
+					newAccountPublicKey: string;
+					newAccountBalance: number;
+				} | null
 			>null
 		};
 		try {
@@ -112,6 +127,7 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 				return {
 					newAccountId,
 					newAccountPrivateKey: newAccountPrivateKey.toString(),
+					newAccountPublicKey,
 					newAccountBalance
 				};
 			});
@@ -125,13 +141,13 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 		accountId: string
 	): Promise<{
 		error: Error | null;
-		data: { id: string; privKey: string; balance: number } | null;
+		data: { id: string; pubKey: string; balance: number } | null;
 	}> {
 		this.client.setOperator(this.operatorId, this.operatorKey);
 
 		const response = {
 			error: <Error | null>null,
-			data: <{ id: string; privKey: string; balance: number } | null>null
+			data: <{ id: string; pubKey: string; balance: number } | null>null
 		};
 
 		try {
@@ -143,10 +159,10 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 			if (!(accountInfo instanceof AccountInfo)) throw new Error('Got bad account info response');
 
 			const id = accountInfo.accountId.toString();
-			const privKey = `${accountInfo.key}`;
+			const pubKey = `${accountInfo.key}`;
 			const balance = parseFloat(accountInfo.balance.toString());
 
-			response.data = { id, privKey, balance };
+			response.data = { id, pubKey, balance };
 		} catch (error) {
 			response.error = error;
 		}

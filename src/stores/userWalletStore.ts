@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 
 type userWallet = {
 	accountId: string;
+	publicKey: string;
 	privateKey: string;
 	balance: string | number;
 };
@@ -11,6 +12,6 @@ export const createUserWallet = (initial: userWallet) => {
 	return {
 		subscribe,
 		set,
-    update
+		update
 	};
 };

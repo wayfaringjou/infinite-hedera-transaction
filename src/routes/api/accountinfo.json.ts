@@ -5,9 +5,11 @@ export async function get({ query }: Request): Promise<EndpointOutput | Error> {
 	const account = query.get('account');
 	let response: {
 		error: Error | string | null;
-		data: { id: string; privKey: string; balance: number } | null;
+		data: { id: string; pubKey: string; balance: number } | null;
+	} = {
+		error: null,
+		data: null
 	};
-
 	try {
 		response = await hederaOperator.accountInfo(account);
 		if (response.error instanceof Error) throw response.error;
@@ -16,6 +18,5 @@ export async function get({ query }: Request): Promise<EndpointOutput | Error> {
 	}
 
 	const body = JSON.stringify(response);
-	console.log(body);
 	return { body };
 }

@@ -4,7 +4,12 @@ import type { EndpointOutput } from '@sveltejs/kit';
 export async function get(): Promise<EndpointOutput> {
 	let response: {
 		error: Error | string | null;
-		data: { newAccountId: string; newAccountPrivateKey: string; newAccountBalance: number } | null;
+		data: {
+			newAccountId: string;
+			newAccountPrivateKey: string;
+			newAccountPublicKey: string;
+			newAccountBalance: number;
+		} | null;
 	};
 
 	try {

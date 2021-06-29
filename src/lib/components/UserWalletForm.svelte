@@ -12,7 +12,7 @@
 	): Promise<{
 		data?: {
 			error: string | null;
-			data: { id: string; privKey: string; balance: number } | null;
+			data: { id: string; pubKey: string; balance: number } | null;
 		};
 		status?: number;
 		error?: Error;
@@ -37,6 +37,7 @@
 			error: string | null;
 			data: {
 				newAccountId: string;
+				newAccountPublicKey: string;
 				newAccountPrivateKey: string;
 				newAccountBalance: number;
 			} | null;
@@ -73,7 +74,8 @@
 
 			$userWallet = {
 				accountId: data.id,
-				privateKey: data.privKey,
+				publicKey: data.pubKey,
+				privateKey: userPrivateKey,
 				balance: data.balance
 			};
 			loading = false;
@@ -100,10 +102,10 @@
 
 			$userWallet = {
 				accountId: data.newAccountId,
+				publicKey: data.newAccountPublicKey,
 				privateKey: data.newAccountPrivateKey,
 				balance: data.newAccountBalance
 			};
-			console.log($userWallet);
 			loading = false;
 			modal.close();
 		} catch (error) {
@@ -129,6 +131,7 @@
 					name="accountid"
 					placeholder="0.0.1234 (Account Id)"
 					type="text"
+					required
 					bind:value={userAccountId}
 				/>
 			</label>
@@ -141,8 +144,13 @@
 					name="privatekey"
 					placeholder="Private Key"
 					type="text"
+					required
+					pattern={`^[a-zA-Z0-9]{96}$`}
 					bind:value={userPrivateKey}
 				/>
+				{#if userPrivateKey.length > 0 && userPrivateKey.length < 96}
+					<span>Invalid key length.</span>
+				{/if}
 			</label>
 		</div>
 		{#if errorMsg}
@@ -192,8 +200,34 @@
 					type="button"
 					on:click={handleGenerate}
 					class="p-4 text-base font-bold my-8 w-max flex-auto flex-shrink-0"
-					>Generate test account</button
 				>
+					{#if loading}
+						<svg
+							class="animate-spin text-black m-auto"
+							width="30px"
+							height="30px"
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<circle
+								class="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								stroke-width="4"
+							/>
+							<path
+								class="opacity-75"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+							/>
+						</svg>
+					{:else}
+						Generate demo account
+					{/if}
+				</button>
 			{/if}
 		</div>
 	</fieldset>

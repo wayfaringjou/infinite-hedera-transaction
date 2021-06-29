@@ -1,16 +1,12 @@
 <script context="module">
-	export async function load({ page, fetch }) {
-		const url = `/api/${page.params.token}.json`;
-		const accountRes = await fetch(url);
+	export async function load({ fetch }) {
+		const url = '/api/marketValue.json';
+		const res = await fetch(url);
 
-		const url2 = '/api/marketValue.json';
-		const res = await fetch(url2);
-
-		if (res.ok && accountRes.ok) {
+		if (res.ok) {
 			return {
 				props: {
-					data: await res.json(),
-					accountData: await accountRes.json()
+					data: await res.json()
 				}
 			};
 		}
@@ -23,14 +19,19 @@
 </script>
 
 <script lang="ts">
+	import type { TransactionReceipt } from '@hashgraph/sdk';
 	import { goto } from '$app/navigation';
-	import { modal, userWallet } from '../../stores/stores';
+	import { modal, userWallet, userFunds } from '../../stores/stores';
 	import Modal from '$lib/ui/Modal.svelte';
 	import UserWalletForm from '$lib/components/UserWalletForm.svelte';
 	import HrHeader from '$lib/ui/HrHeader.svelte';
+
+	let loading = false;
+	let errorMsg = '';
+	let transferAmount: string | number = '';
+
 	export let data;
 	const usdValue = data?.hbarData.data['4642'].quote.USD.price;
-	let transferAmount: string | number = '';
 
 	function roundNumber(num: number) {
 		const numberFormatted = new Intl.NumberFormat('en-US', {
@@ -39,7 +40,14 @@
 		return Number(numberFormatted);
 	}
 
-	export async function postTransferAmount() {
+	export async function postTransferAmount(): Promise<{
+		data?: {
+			error: string | null;
+			data: { transferReceipt: TransactionReceipt; txStatus: string } | null;
+		};
+		status?: number;
+		error?: Error;
+	}> {
 		const url = `/api/transferhbar`;
 		const res = await fetch(url, {
 			method: 'post',
@@ -47,7 +55,8 @@
 				'Content-Type': 'application/json'
 			}),
 			body: JSON.stringify({
-				sender: $userWallet.accountId,				
+				sender: $userWallet.accountId,
+				senderKey: $userWallet.privateKey,
 				transferedHbars: transferAmount
 			})
 		});
@@ -65,8 +74,27 @@
 	}
 
 	const handleTransfer = async () => {
-		const data = await postTransferAmount();
-		console.log(data);
+		try {
+			loading = true;
+			const {
+				data: { data, error }
+			} = await postTransferAmount();
+
+			if (error) throw new Error(error);
+			if (!data) throw new Error('There was a problem retrieving receipt');
+
+			if (data.txStatus !== 'SUCCESS')
+				throw new Error(`Transaction failed with error: ${data.txStatus}`);
+
+			const newFunds = roundNumber(parseFloat(`${transferAmount}`) * usdValue);
+			$userFunds.balance = newFunds + parseFloat(`${$userFunds.balance}`);
+			loading = false;
+			goto('/');
+		} catch (error) {
+			console.error(error);
+			errorMsg = error.message;
+			loading = false;
+		}
 	};
 </script>
 
@@ -171,10 +199,15 @@
 							$ {transferAmount ? roundNumber(parseFloat(`${transferAmount}`) * usdValue) : '0.00'}
 						</span>
 					</p>
+					{#if errorMsg}
+						<span class="text-center block text-red-500 text-xl font-bold"
+							>There was an error, check console for more details.</span
+						>
+					{/if}
 					<button
 						disabled={!(
 							parseFloat(`${$userWallet.balance}`) > 0 && parseFloat(`${transferAmount}`) > 0
-						)}
+						) || loading}
 						on:click={handleTransfer}
 						class={`${
 							parseFloat(`${$userWallet.balance}`) > 0 && parseFloat(`${transferAmount}`) > 0
@@ -183,7 +216,32 @@
 						} text-white w-full rounded-full p-4 text-xl font-bold my-8`}
 					>
 						{#if parseFloat(`${$userWallet.balance}`) > 0 && parseFloat(`${transferAmount}`) > 0}
-							Transfer
+							{#if loading}
+								<svg
+									class="animate-spin text-white m-auto"
+									width="30px"
+									height="30px"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+								>
+									<circle
+										class="opacity-25"
+										cx="12"
+										cy="12"
+										r="10"
+										stroke="currentColor"
+										stroke-width="4"
+									/>
+									<path
+										class="opacity-75"
+										fill="currentColor"
+										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+									/>
+								</svg>
+							{:else}
+								Transfer
+							{/if}
 						{:else}
 							No amount added
 						{/if}

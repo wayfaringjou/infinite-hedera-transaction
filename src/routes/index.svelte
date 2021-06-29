@@ -2,12 +2,12 @@
 	import HrHeader from '$lib/ui/HrHeader.svelte';
 	import Modal from '$lib/ui/Modal.svelte';
 	import HederaButton from '$lib/components/HederaButton.svelte';
-	import { modal } from '../stores/stores';
+	import { modal, userFunds } from '../stores/stores';
 </script>
 
 <main class="min-h-screen">
 	<header class="bg-black text-white p-6">
-		<div class="p-6">
+		<div class="p-6 container mx-auto">
 			<span class="">
 				<a href="/" class="flex flex-row flex-nowrap items-center text-gray-300">
 					<svg
@@ -23,16 +23,16 @@
 			<h2 class="mt-8">My wallet</h2>
 		</div>
 	</header>
-	<div class="grid grid-cols-1 md-lg:grid-cols-30-70">
+	<div class="grid grid-cols-1 md-lg:grid-cols-30-70 container mx-auto">
 		<section class="p-6">
 			<header>
 				<HrHeader header="Total Balance" />
 			</header>
 			<section>
 				<div>
-					<span class="text-5xl font-medium block my-6">$0.00</span>
+					<span class="text-5xl font-medium block my-6">${$userFunds.balance}</span>
 					<span class="font-bold block text-gray-400">Available:</span>
-					<span class="font-medium">$0.00</span>
+					<span class="font-medium">${$userFunds.balance}</span>
 					<span class="text-gray-400 text-sm font-medium">(Excludes pending transactions)</span>
 					<button
 						on:click={modal.open}
