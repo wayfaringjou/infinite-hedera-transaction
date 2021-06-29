@@ -184,7 +184,7 @@
 							<button
 								class="p-4 text-2xl font-bold w-max flex-shrink-0"
 								type="button"
-								on:click={() => (transferAmount = parseFloat(`${$userWallet.balance}`))}
+								on:click={() => (transferAmount = parseFloat(`${$userWallet.balance}`) - 0.02) * 1}
 							>
 								Add Max
 							</button>

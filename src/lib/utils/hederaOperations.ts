@@ -99,6 +99,7 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 			newAccountBalance: number;
 		} | null;
 	}> {
+		this.client.setOperator(this.operatorId, this.operatorKey);
 		const newAccountPrivateKey = await PrivateKey.generate();
 		const newAccountPublicKey = newAccountPrivateKey.publicKey;
 
