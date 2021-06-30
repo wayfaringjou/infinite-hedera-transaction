@@ -33,11 +33,8 @@
 	export let data;
 	const usdValue = data?.hbarData.data['4642'].quote.USD.price;
 
-	function roundNumber(num: number) {
-		const numberFormatted = new Intl.NumberFormat('en-US', {
-			maximumFractionDigits: 2
-		}).format(num);
-		return Number(numberFormatted);
+	function roundNumber(num: number): number {
+		return Number(num.toFixed(2));
 	}
 
 	export async function postTransferAmount(): Promise<{
@@ -165,7 +162,7 @@
 							{usdValue} USD
 						</span>
 						<span class="mt-4 block">Available Funds:</span>
-						<span class="text-2xl block mt-4">{$userWallet.balance}</span>
+						<span class="text-2xl block mt-4">{$userWallet.balance} ℏ</span>
 					</p>
 					<label for="transfer">
 						<p>Amount of Hbars to transfer:</p>
@@ -181,13 +178,6 @@
 								name="transfer"
 								id="transfer"
 							/>
-							<button
-								class="p-4 text-2xl font-bold w-max flex-shrink-0"
-								type="button"
-								on:click={() => (transferAmount = parseFloat(`${$userWallet.balance}`) - 0.02) * 1}
-							>
-								Add Max
-							</button>
 						</div>
 					</label>
 				</li>

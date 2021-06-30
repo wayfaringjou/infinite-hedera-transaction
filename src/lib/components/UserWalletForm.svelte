@@ -120,10 +120,10 @@
 <form class="p-4" on:submit|preventDefault={handleSubmit}>
 	<fieldset class="space-y-6 text-lg">
 		<legend class="text-gray-400">Enter your account id and private key:</legend>
-		<p class="bg-gray-200 p-5 text-center rounded-full">
+		<p class="bg-gray-200 p-5 text-center rounded-full w-full">
 			Selected Network: <span class="font-bold">Test</span>
 		</p>
-		<div>
+		<div class="w-full">
 			<label for="accountid">
 				<p>Account Id:</p>
 				<input
@@ -136,8 +136,8 @@
 				/>
 			</label>
 		</div>
-		<div>
-			<label for="privatekey">
+		<div class="w-full">
+			<label for="privatekey" class="block w-full">
 				<p>Private key:</p>
 				<input
 					class="border-b border-gray-400 border-solid w-full mt-4 p-1"
@@ -158,12 +158,12 @@
 				>There was an error, check console for more details.</span
 			>
 		{/if}
-		<div class="flex flex-row flex-nowrap">
+		<div class="flex flex-col flex-nowrap w-full">
 			{#if !createSelected}
 				<button
 					type="submit"
 					disabled={loading}
-					class={`text-white w-full rounded-full p-6 text-xl font-bold my-8 ${
+					class={`text-white p-4 rounded-full w-full flex-auto text-base sm:text-xl font-bold my-5 ${
 						loading ? 'bg-gray-300' : 'bg-black'
 					}`}
 				>
@@ -199,7 +199,7 @@
 				<button
 					type="button"
 					on:click={handleGenerate}
-					class="p-4 text-base font-bold my-8 w-max flex-auto flex-shrink-0"
+					class="p-4 text-base font-bold my-5 flex-auto"
 				>
 					{#if loading}
 						<svg

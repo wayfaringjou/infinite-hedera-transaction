@@ -1,9 +1,15 @@
 module.exports = {
-	purge: [],
+	future: {
+		purgeLayersByDefault: true,
+		removeDeprecatedGapUtilities: true
+	},
+	purge: {
+		content: ['./src/**/*.svelte']
+	},
 	darkMode: false, // or 'media' or 'class'
 	theme: {
 		screens: {
-			'sm': '576px',
+			sm: '576px',
 			'md-lg': '960px'
 		},
 		extend: {

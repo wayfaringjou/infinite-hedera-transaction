@@ -9,5 +9,5 @@ const purgecss = require('@fullhuman/postcss-purgecss')({
 // const production = import.meta.env.MODE === 'production';
 
 module.exports = {
-	plugins: [require('tailwindcss'), .../*production ? [purgecss] :*/ []]
+	plugins: [require('tailwindcss'), purgecss]
 };

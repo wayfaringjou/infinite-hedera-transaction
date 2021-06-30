@@ -40,17 +40,22 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if $modal}
-	<div class="backdrop" />
-	<div class="modal" role="dialog" aria-modal="true" bind:this={modalElement}>
-		<article class="content-wrapper p-6 space-y-4 flex flex-col">
-			<button class="self-end" on:click={close} autofocus
+	<div class="fixed	inset-0	bg-black bg-opacity-70 backdrop-filter backdrop-blur-xs" />
+	<div
+		class="modal fixed left-1/2	top-1/2	transform	-translate-x-1/2 -translate-y-1/2 bg-white rounded-lg"
+		role="dialog"
+		aria-modal="true"
+		bind:this={modalElement}
+	>
+		<article class="content-wrapper py-4 space-y-3 flex flex-col">
+			<button class="self-end p-4" on:click={close}
 				><img
 					src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAG6SURBVHgBtVZNTsJQEJ5CJIaycAEYWZM0JMYNicYbuCkX4ARewkQv4QngAKw8g8aNgRA8ACaUEBdtF+2izte0+lrea4stX/Kl05lmft7M63saqdFk9pht5hnzJCLgMx2my9wy15G8B02ig8MBs0OHwWK+pwOlA/SZV1QOy4gh6oIBWV9SeaByLOEOL7VI2YwCVAWsQlsMMKTqMYgDIPtDG1oE8NlEgJ7qC9u2n8HRaNRN26CL7aRGr0YZ2QdBoOm63p1Op49iEMjQwYZvSI02pshgnsqsi8Xi1TTNm1ar1WWn1/P5/M0wDD12ztlb4/H4YbVaOYoAdUQ36W+H7gHZTiaTJw7ScRxnA53ofDabbUgNHxVkzj6yEytpNBp6QedhBTUqCE3TApmcB1TQp+SOTkBsKDL3PM8Ve5Kx/oCPCvyizrEsIGTZdEngoMm3zAuZFTMua2i68fy8VwRYowJLYQz3gayhkONKcvbBFkb8Ku7oOHhBBTggLKoe8OnGY7qk6oHT7Xc8UQWm6ZyqARL+EgMAu+hZ9tf9wfyMX2QTgKYP6X+HPjLfisqsEROvLZB1Sl5bwG/Kubb8AGJE0Xxy40cwAAAAAElFTkSuQmCC"
 					alt=""
 					class=""
 				/></button
 			>
-			<header class="text-sm sm:text-2xl">
+			<header class="text-sm sm:text-2xl p-4">
 				<slot name="header" />
 			</header>
 			<section class="content">
@@ -59,33 +64,3 @@
 		</article>
 	</div>
 {/if}
-
-<style>
-	.backdrop {
-		@apply fixed;
-		@apply inset-0;
-		@apply bg-black;
-		@apply bg-opacity-70;
-		@apply backdrop-filter;
-		@apply backdrop-blur-xs;
-	}
-
-	.modal {
-		@apply fixed;
-		@apply left-1/2;
-		@apply top-1/2;
-		@apply transform;
-		@apply -translate-x-1/2;
-		@apply -translate-y-1/2;
-		@apply bg-white;
-		@apply rounded-lg;
-		/*max-height: 650px;*/
-		width: 85%;
-	}
-	@media (min-width: 500px) {
-		.modal {
-			max-width: 550px;
-			width: 500px;
-		}
-	}
-</style>
