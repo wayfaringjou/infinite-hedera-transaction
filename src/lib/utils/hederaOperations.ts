@@ -118,7 +118,7 @@ const createOperator = (account: string, privateKey: string | null = null) => ({
 			const newAccountData = await this.retryOnStreamErr(3, async () => {
 				const transaction = new AccountCreateTransaction()
 					.setKey(newAccountPublicKey)
-					.setInitialBalance(new Hbar(10));
+					.setInitialBalance(new Hbar(100));
 
 				const txResponse = await transaction.execute(this.client);
 
